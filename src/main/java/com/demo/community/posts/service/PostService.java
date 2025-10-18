@@ -1,25 +1,27 @@
 package com.demo.community.posts.service;
 
-import com.demo.community.posts.domain.entity.Posts;
-import com.demo.community.posts.domain.entity.QPostViewCounts;
-import com.demo.community.posts.domain.entity.QPosts;
-import com.demo.community.posts.domain.entity.QPostsCounts;
+import com.demo.community.posts.domain.entity.*;
 import com.demo.community.posts.domain.repository.PostRepository;
+import com.demo.community.posts.domain.repository.PostViewCountsRepository;
+import com.demo.community.posts.domain.repository.PostsCountsRepository;
 import com.demo.community.posts.dto.PostRequestDTO;
 import com.demo.community.posts.dto.PostResponseDTO;
 import com.demo.community.users.domain.enitty.QUsers;
 import com.demo.community.users.domain.enitty.Users;
 import com.demo.community.users.domain.repository.UserRepository;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,6 +30,8 @@ public class PostService {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final PostsCountsRepository postsCountsRepository;
+    private final PostViewCountsRepository postViewCountsRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional
@@ -36,17 +40,21 @@ public class PostService {
                 // 이 예외는 나중에 커스텀 에외 (실패코드, 메세지를 응답으로 반환하는)로 변경 예정
                 .orElseThrow(() -> new EntityNotFoundException("user not found"));
 
-        Boolean includeImage = request.getImageUrl().isEmpty();
+        Boolean includeImage = request.getImageUrl()!=null;
 
         Posts post = Posts.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .user(user)
                 .includeImage(includeImage).build();
-
         if (includeImage) {post.addImages(request.getImageUrl());}
 
+        PostsCounts postsCounts = PostsCounts.builder().posts(post).build();
+        PostViewCounts postViewCounts = PostViewCounts.builder().posts(post).build();
+
         postRepository.save(post);
+        postsCountsRepository.save(postsCounts);
+        postViewCountsRepository.save(postViewCounts);
 
         return PostResponseDTO.PostCreateResponse.builder().postId(post.getId()).build();
     }
@@ -70,13 +78,70 @@ public class PostService {
 
     @Transactional
     public PostResponseDTO.PostDetailResponse detailPost(Long postId, Long userId){
-        Posts post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("post not found"));
 
-        Boolean authorization = post.getUser().getId().equals(userId);
+        QPosts p = QPosts.posts;
+        QUsers u = QUsers.users;
+        QPostsImages pi = QPostsImages.postsImages;
+        QPostsCounts pc = QPostsCounts.postsCounts;
+        QPostViewCounts pv = QPostViewCounts.postViewCounts;
+        //QLike l = QLike.like;
 
+        // likePressed: exists 서브쿼리
+//        BooleanExpression likeExists = JPAExpressions
+//                .selectOne()
+//                .from(l)
+//                .where(l.posts.id.eq(p.id),
+//                        l.user.id.eq(currentUserId))
+//                .exists();
 
+        List<Tuple> rows = jpaQueryFactory
+                .select(
+                        p.id,
+                        p.title,
+                        p.content,
+                        u.nickname,
+                        u.profileImage,
+                        u.id,
+                        pc.likeCounts,
+                        pv.viewCounts,
+                        pc.replyCounts,
+                        pi.imageUrl
+                        //,likeExists
+                )
+                .from(p)
+                .leftJoin(p.user, u)
+                .leftJoin(pc).on(pc.posts.id.eq(p.id))
+                .leftJoin(pv).on(pv.posts.id.eq(p.id))
+                .leftJoin(pi).on(pi.posts.id.eq(p.id))
+                .where(p.id.eq(postId))
+                .fetch();
 
+        if(rows.isEmpty()){
+            // 조회값이 비어있을 때 (존재하지 않는 postId일 때) 오류 반환하는 코드 필요함.
+        }
+
+        List<String> imageUrls = rows.stream()
+                .map(t -> t.get(pi.imageUrl))
+                .filter(Objects::nonNull)              // null 제외 (LEFT JOIN일 경우)
+                .toList();
+
+        Tuple t = rows.getFirst();
+
+        // 이 값이 null 일 때 (존재하지 않는 postId일 때) 오류 반환하는 코드 필요함.
+        return PostResponseDTO.PostDetailResponse.builder()
+                .postId(t.get(p.id))
+                .title(t.get(p.title))
+                .content(t.get(p.content))
+                .writer(t.get(u.nickname))
+                .writerImage(t.get(u.profileImage))
+                .count(PostResponseDTO.Count.builder()
+                        .like(t.get(pc.likeCounts))
+                        .reply(t.get(pc.replyCounts))
+                        .visit(t.get(pv.viewCounts)).build())
+                .likePressed(false)
+                .authorization(Objects.equals(t.get(u.id), userId))
+                .images(imageUrls)
+                .build();
     }
 
     @Transactional
@@ -123,7 +188,7 @@ public class PostService {
                             p.createdAt
                     ))
                     .from(p)
-                    .join(p.user, u)
+                    .leftJoin(p.user, u)
                     .leftJoin(pc).on(pc.posts.eq(p))
                     .leftJoin(pv).on(pv.posts.eq(p))
                     .where(cursorId != null ? p.id.lt(cursorId) : null)
@@ -140,7 +205,7 @@ public class PostService {
         Long nextCursor = posts.isEmpty() ? null : posts.getLast().getPostId();
 
         PostResponseDTO.PostListSliceResponse body = PostResponseDTO.PostListSliceResponse.builder()
-                //.items()
+                .items(posts)
                 .hasNext(hasNext)
                 .nextCursorId(nextCursor).build();
 
