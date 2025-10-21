@@ -2,8 +2,10 @@ package com.demo.community.posts.domain.repository;
 
 import com.demo.community.posts.domain.entity.PostsCounts;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PostsCountsRepository extends JpaRepository<PostsCounts, Long> {
+    void deleteById(@Param("postId") Long Id);
 }
