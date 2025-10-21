@@ -4,6 +4,7 @@ import com.demo.community.posts.domain.entity.*;
 import com.demo.community.posts.domain.repository.PostRepository;
 import com.demo.community.posts.domain.repository.PostViewCountsRepository;
 import com.demo.community.posts.domain.repository.PostsCountsRepository;
+import com.demo.community.posts.domain.repository.PostsImageRepository;
 import com.demo.community.posts.dto.PostRequestDTO;
 import com.demo.community.posts.dto.PostResponseDTO;
 import com.demo.community.users.domain.enitty.QUsers;
@@ -32,6 +33,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostsCountsRepository postsCountsRepository;
     private final PostViewCountsRepository postViewCountsRepository;
+    private final PostsImageRepository postsImageRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional
@@ -61,9 +63,6 @@ public class PostService {
 
     @Transactional
     public void deletePost(Long postId, Long userId){
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("user not found"));
-
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("post not found"));
 
@@ -73,6 +72,9 @@ public class PostService {
             throw new EntityNotFoundException("delete forbidden user");
         }
 
+        postViewCountsRepository.deleteById(postId);
+        postsCountsRepository.deleteById(postId);
+        postsImageRepository.deleteByPostId(postId);
         postRepository.delete(post);
     }
 
