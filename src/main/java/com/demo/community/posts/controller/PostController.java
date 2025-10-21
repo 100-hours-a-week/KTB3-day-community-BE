@@ -14,6 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 @Validated
 @RestController
 @RequiredArgsConstructor

@@ -1,13 +1,12 @@
 package com.demo.community.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter @Setter
 public class ApiResponse<T> {
 
     private String message;
