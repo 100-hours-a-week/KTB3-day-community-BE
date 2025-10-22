@@ -44,6 +44,7 @@ public class UsersService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
+    @Transactional
     public Long creatUser(UsersRequestDTO.UserCreateRequest req){
 
         Optional<Users> checkEmail = userRepository.findFirstByEmail(req.getEmail());

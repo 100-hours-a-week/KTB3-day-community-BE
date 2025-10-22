@@ -52,7 +52,7 @@ public class UsersController {
         Boolean result = usersService.checkEmail(req);
         String message = result ? "you can use this email" : "email already exists";
 
-        return ResponseEntity.ok(new ApiResponse<>(message, Map.of("location", result)));
+        return ResponseEntity.ok(new ApiResponse<>(message, Map.of("availability", result)));
     }
 
     // 중목닉네임 확인
@@ -63,7 +63,7 @@ public class UsersController {
         Boolean result = usersService.checkNickname(req);
         String message = result ? "you can use this nickname" : "nickname already exists";
 
-        return ResponseEntity.ok(new ApiResponse<>(message, Map.of("location", result)));
+        return ResponseEntity.ok(new ApiResponse<>(message, Map.of("availability", result)));
     }
 
     // 프로필 사진 업로드 (임시)
