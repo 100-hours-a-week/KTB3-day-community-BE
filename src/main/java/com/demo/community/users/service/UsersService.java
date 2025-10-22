@@ -1,0 +1,107 @@
+package com.demo.community.users.service;
+
+import com.demo.community.users.domain.enitty.Users;
+import com.demo.community.users.domain.repository.UserRepository;
+import com.demo.community.users.dto.UsersRequestDTO;
+import com.demo.community.users.dto.UsersResponseDTO;
+import jakarta.persistence.EntityExistsException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.Optional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class UsersService {
+
+//    private static String sha256(String input) {
+//        try{
+//            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+//            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+//            StringBuilder hexString = new StringBuilder();
+//            for (byte b : hash) {
+//                String hex = Integer.toHexString(0xff & b);
+//                if (hex.length() == 1) hexString.append('0');
+//                hexString.append(hex);
+//            }
+//            return hexString.toString();
+//        } catch (NoSuchAlgorithmException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    public Long creatUser(UsersRequestDTO.UserCreateRequest req){
+
+        Optional<Users> checkEmail = userRepository.findFirstByEmail(req.getEmail());
+        Optional<Users> checkName = userRepository.findFirstByNickname(req.getNickname());
+
+        // 이것도 상태코드 + 오류문 반환하는 예외처리로 바꾸기.
+        if(checkEmail.isPresent()) {
+            throw new EntityExistsException("same email user already exists.");
+        }
+        if (checkName.isPresent()) {
+            throw new EntityExistsException("same nickname user already exits");
+        }
+
+        String encrypted = passwordEncoder.encode(req.getPassword());
+
+        Users user = Users.builder()
+                .email(req.getEmail())
+                .password(encrypted)
+                .nickname(req.getNickname())
+                .profileImage(req.getProfileImage())
+                .build();
+
+        userRepository.save(user);
+
+        return user.getId();
+    }
+
+    public Boolean checkEmail (UsersRequestDTO.EmailCheckRequest req){
+        Optional<Users> checkEmail = userRepository.findFirstByEmail(req.getEmail());
+
+        if(checkEmail.isPresent()) {
+            return Boolean.FALSE;
+        } else {
+            return Boolean.TRUE;
+        }
+    }
+
+    public Boolean checkNickname (UsersRequestDTO.NicknameCheckRequest req){
+        Optional<Users> checkNickname = userRepository.findFirstByNickname(req.getNickname());
+
+        if(checkNickname.isPresent()) {
+            return Boolean.FALSE;
+        } else {
+            return Boolean.TRUE;
+        }
+    }
+
+    // 하드코딩으로 localhost 주소 반환하는 상태.
+    public UsersResponseDTO.UserImageResponse getProfileImageUrl (MultipartFile file) throws IOException {
+        String originName = file.getOriginalFilename();
+
+        Path savepath = Paths.get("./uploads").toAbsolutePath().normalize().resolve(originName);
+        file.transferTo(savepath.toFile());
+
+        String finalUrl = "http://localhost:8080/uploads/" + originName;
+
+        return UsersResponseDTO.UserImageResponse.builder().url(finalUrl).build();
+    }
+
+
+}
