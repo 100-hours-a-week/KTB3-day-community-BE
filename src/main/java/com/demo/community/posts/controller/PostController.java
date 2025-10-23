@@ -4,6 +4,8 @@ import com.demo.community.common.dto.ApiResponse;
 import com.demo.community.posts.dto.PostRequestDTO;
 import com.demo.community.posts.dto.PostResponseDTO;
 import com.demo.community.posts.service.PostService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
@@ -14,7 +16,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-@CrossOrigin(origins = "http://127.0.0.1:5500")
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -26,10 +27,13 @@ public class PostController {
     // 글 작성
     @PostMapping
     public ResponseEntity<ApiResponse<PostResponseDTO.PostCreateResponse>> createPost(
-            @RequestBody @Valid PostRequestDTO.PostCreateRequest request
+            @RequestBody @Valid PostRequestDTO.PostCreateRequest request,
+            HttpServletRequest req
     ){
         // 원래 header에서 받아와야 하지만, 토큰 구현이 안되어있으므로 일단 userId = 1 로 고정
-        Long userId = 1L;
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
 
         PostResponseDTO.PostCreateResponse result = postService.createPost(request, userId);
 
@@ -56,9 +60,12 @@ public class PostController {
     // 글 상세 조회
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponseDTO.PostDetailResponse>> detailPost(
-            @PathVariable("postId") Long postId
+            @PathVariable("postId") Long postId,
+            HttpServletRequest req
     ){
-        Long userId = 1L;
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
 
         PostResponseDTO.PostDetailResponse result = postService.detailPost(postId, userId);
 
@@ -68,10 +75,14 @@ public class PostController {
     // 글 삭제
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<Void>> deletePost(
-            @PathVariable("postId") Long postId
+            @PathVariable("postId") Long postId,
+            HttpServletRequest req
     ){
         // 원래 header에서 받아와야 하지만, 토큰 구현이 안되어있으므로 일단 userId = 1 로 고정
-        Long userId = 1L;
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
+
 
         postService.deletePost(postId, userId);
 
@@ -82,10 +93,13 @@ public class PostController {
     @PatchMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponseDTO.PostUpdateResponse>> updatePost(
             @PathVariable("postId") Long postId,
-            @RequestBody @Valid PostRequestDTO.PostUpdateRequest request
+            @RequestBody @Valid PostRequestDTO.PostUpdateRequest request,
+            HttpServletRequest req
     ){
         // 원래 header에서 받아와야 하지만, 토큰 구현이 안되어있으므로 일단 userId = 1 로 고정
-        Long userId = 1L;
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
 
         PostResponseDTO.PostUpdateResponse result = postService.updatePost(request, postId, userId);
 
