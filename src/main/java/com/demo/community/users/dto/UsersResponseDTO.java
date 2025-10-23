@@ -1,5 +1,6 @@
 package com.demo.community.users.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 public class UsersResponseDTO {

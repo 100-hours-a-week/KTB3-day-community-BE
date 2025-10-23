@@ -72,6 +72,7 @@ public class UsersService {
         return user.getId();
     }
 
+    @Transactional
     public Boolean checkEmail (UsersRequestDTO.EmailCheckRequest req){
         Optional<Users> checkEmail = userRepository.findFirstByEmail(req.getEmail());
 
@@ -82,6 +83,7 @@ public class UsersService {
         }
     }
 
+    @Transactional
     public Boolean checkNickname (UsersRequestDTO.NicknameCheckRequest req){
         Optional<Users> checkNickname = userRepository.findFirstByNickname(req.getNickname());
 
@@ -93,6 +95,7 @@ public class UsersService {
     }
 
     // 하드코딩으로 localhost 주소 반환하는 상태.
+    @Transactional
     public UsersResponseDTO.UserImageResponse getProfileImageUrl (MultipartFile file) throws IOException {
         String originName = file.getOriginalFilename();
 
