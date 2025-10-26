@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>이용약관 동의</title>
+    <link rel="stylesheet" th:href="@{/css/agreement.css}" />
+</head>
+<body>
+<main class="container">
+    <h1>이용약관 동의</h1>
+
+    <p class="greeting"><strong th:text="${name}"></strong>님, 서비스를 이용하시려면 약관에 동의해 주세요.</p>
+
+    <section class="terms-box" aria-label="이용약관 전문">
+        <h2>약관의 내용</h2>
+        <div class="terms-scroll">
+            <p>
+                서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항,
+                기타 필요한 사항을 규정함을 목적으로 합니다. 이용자는 본 약관에 동의함으로써 서비스를
+                이용할 수 있습니다. 본 약관은 서비스 개선을 위해 사전 공지 후 개정될 수 있습니다.
+            </p>
+            <p>
+                1) 서비스 이용 조건 및 절차<br/>
+                2) 개인정보의 수집·이용 및 보호에 관한 사항<br/>
+                3) 이용자의 권리와 의무, 제한 및 이용정지 기준<br/>
+                4) 분쟁 해결 및 관할에 관한 사항<br/>
+                ※ 자세한 내용은 회사의 개인정보 처리방침 및 운영정책을 참고하시기 바랍니다.
+            </p>
+        </div>
+    </section>
+
+    <label class="agree-row">
+        <input type="checkbox" id="agree" />
+        <span>(필수) 이용약관에 동의합니다.</span>
+    </label>
+
+    <button id="proceedBtn"
+            class="btn"
+            th:attr="data-next-page=${nextPage}"
+            disabled>
+        다음으로
+    </button>
+
+</main>
+
+<script src="/agreement.js"></script>
+
+</body>
+</html>
