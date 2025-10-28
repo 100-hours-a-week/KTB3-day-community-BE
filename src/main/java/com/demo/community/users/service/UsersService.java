@@ -7,6 +7,7 @@ import com.demo.community.users.dto.UsersResponseDTO;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,6 +128,26 @@ public class UsersService {
                 .userImage(user.getProfileImage())
                 .createdAt(user.getCreatedAt())
                 .modifiedAt(user.getUpdatedAt()).build();
+    }
+
+    @Transactional
+    public void modifyPassword (
+            UsersRequestDTO.PasswordUpdateRequest request,
+            Long userId,
+            Long curUser
+    ){
+        if (!Objects.equals(userId, curUser)) {
+            throw new EntityNotFoundException("forbidden user");
+        }
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("user not found"));
+
+        if (!passwordEncoder.matches(request.getCurPassword(), user.getPassword())){
+            throw new AccessDeniedException("current password not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Transactional

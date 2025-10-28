@@ -107,6 +107,20 @@ public class UsersController {
     }
 
     // 유저 비밀번호 수정
+    @PostMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Void>> modifyPassword(
+            @PathVariable("userId") Long userId,
+            @RequestBody @Valid UsersRequestDTO.PasswordUpdateRequest request,
+            HttpServletRequest req
+    ) {
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long curUser = (Long) session.getAttribute("USER_ID");
+
+        usersService.modifyPassword(request, userId, curUser);
+
+        return ResponseEntity.ok(new ApiResponse<>("password successfully modified", null));
+    }
 
 
     // 유저 상세조회

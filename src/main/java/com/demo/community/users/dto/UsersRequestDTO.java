@@ -47,4 +47,13 @@ public class UsersRequestDTO {
         private String profileImage;
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter @Setter
+    public static class PasswordUpdateRequest{
+        private String curPassword;
+        private String newPassword;
+    }
+
 }
