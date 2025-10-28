@@ -38,4 +38,13 @@ public class UsersRequestDTO {
         private String nickname;
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter @Setter
+    public static class UserUpdateRequest{
+        private String nickname;
+        private String profileImage;
+    }
+
 }

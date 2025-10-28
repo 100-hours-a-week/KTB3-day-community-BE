@@ -28,4 +28,10 @@ public class Users extends BaseEntity {
     @Column (nullable = false)
     @Builder.Default
     private String profileImage = "https://i.namu.wiki/i/M0j6sykCciGaZJ8yW0CMumUigNAFS8Z-dJA9h_GKYSmqqYSQyqJq8D8xSg3qAz2htlsPQfyHZZMmAbPV-Ml9UA.webp";
+
+    public void updateUser(String nickname, String profileImage) {
+        if (nickname != null){this.nickname = nickname;}
+        if (profileImage != null && profileImage.isEmpty()){this.profileImage = profileImage;}
+    }
+
 }

@@ -4,6 +4,8 @@ import com.demo.community.common.dto.ApiResponse;
 import com.demo.community.users.dto.UsersRequestDTO;
 import com.demo.community.users.dto.UsersResponseDTO;
 import com.demo.community.users.service.UsersService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -88,7 +90,20 @@ public class UsersController {
     }
 
     // 유저 회원정보 수정
+    @PatchMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UsersResponseDTO.UserInfoResponse>> modifyUser(
+        @PathVariable("userId") Long userId,
+        @RequestBody @Valid UsersRequestDTO.UserUpdateRequest request,
+        HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long curUser = (Long) session.getAttribute("USER_ID");
 
+        UsersResponseDTO.UserInfoResponse result = usersService.updateProfile(request, userId, curUser);
+
+        return ResponseEntity.ok(new ApiResponse<>("user successfully modified", result));
+    }
 
     // 유저 비밀번호 수정
 
