@@ -1,6 +1,7 @@
 package com.demo.community.users.controller;
 
 import com.demo.community.common.dto.ApiResponse;
+import com.demo.community.users.domain.enitty.Users;
 import com.demo.community.users.dto.UsersRequestDTO;
 import com.demo.community.users.dto.UsersResponseDTO;
 import com.demo.community.users.service.UsersService;
@@ -109,6 +110,20 @@ public class UsersController {
 
 
     // 유저 상세조회
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UsersResponseDTO.UserInfoResponse>> getUser(
+            @PathVariable("userId") Long userId,
+            HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        // 인증
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long curUser = (Long) session.getAttribute("USER_ID");
+
+        UsersResponseDTO.UserInfoResponse result =usersService.getUser(userId, curUser);
+
+        return ResponseEntity.ok(new ApiResponse<>("user info succefully got", result));
+    }
 
 
     // 유저 간단조회 (필수X)

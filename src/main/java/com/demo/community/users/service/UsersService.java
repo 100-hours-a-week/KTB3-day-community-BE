@@ -111,6 +111,25 @@ public class UsersService {
     }
 
     @Transactional
+    public UsersResponseDTO.UserInfoResponse getUser (Long userId, Long curUser){
+        // 인가
+        if (!Objects.equals(userId, curUser)) {
+            throw new EntityNotFoundException("forbidden user (not a writer)");
+        }
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("user not found"));
+
+        return UsersResponseDTO.UserInfoResponse.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .userImage(user.getProfileImage())
+                .createdAt(user.getCreatedAt())
+                .modifiedAt(user.getUpdatedAt()).build();
+    }
+
+    @Transactional
     public UsersResponseDTO.UserInfoResponse updateProfile (
         UsersRequestDTO.UserUpdateRequest request,
         Long userId,
