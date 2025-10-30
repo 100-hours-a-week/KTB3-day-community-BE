@@ -136,6 +136,7 @@ public class UsersService {
             Long userId,
             Long curUser
     ){
+        // 인가
         if (!Objects.equals(userId, curUser)) {
             throw new EntityNotFoundException("forbidden user");
         }
@@ -143,6 +144,7 @@ public class UsersService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("user not found"));
 
+        // 기존 비밀번호 확인
         if (!passwordEncoder.matches(request.getCurPassword(), user.getPassword())){
             throw new AccessDeniedException("current password not match");
         }
