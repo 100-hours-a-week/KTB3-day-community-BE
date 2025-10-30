@@ -10,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Validated
 @Controller
@@ -35,5 +32,19 @@ public class LikesPostsController {
         LikesPostsResponseDTO.LikesPostsResultResponse result = likesPostsService.likeCreate(postId, userId);
 
         return ResponseEntity.ok(new ApiResponse<>("like added", result));
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<ApiResponse<LikesPostsResponseDTO.LikesPostsResultResponse>> DeleteLike(
+            @PathVariable("postId") Long postId,
+            HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
+
+        LikesPostsResponseDTO.LikesPostsResultResponse result = likesPostsService.likeDelete(postId, userId);
+
+        return ResponseEntity.ok(new ApiResponse<>("like deleted", result));
     }
 }

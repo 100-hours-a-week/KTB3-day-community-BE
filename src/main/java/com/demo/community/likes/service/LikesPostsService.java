@@ -45,10 +45,36 @@ public class LikesPostsService {
 
         // 원자적으로 post의 likeCount를 +1 하는 SQL
         postsCountsRepository.incrementLikeCount(postId);
+
         int likeCount = postsCountsRepository.getLikeCount(postId);
 
         return LikesPostsResponseDTO.LikesPostsResultResponse.builder()
                 .likeCount(likeCount).userPressed(true).build();
+    }
+
+    @Transactional
+    public LikesPostsResponseDTO.LikesPostsResultResponse likeDelete(Long postId, Long userId){
+
+        boolean nowPressed = likesPostsRepository.existsByUsersIdAndPostsId(userId, postId);
+        if (!nowPressed){
+            throw new AccessDeniedException("this user didn't pressed this post. request likeCreate instead of likeDelete");
+        }
+
+        Optional<Users> user = userRepository.findById(userId);
+        if(user.isEmpty()){throw new EntityNotFoundException("user not found");}
+
+        Optional<Posts> post = postRepository.findById(postId);
+        if(post.isEmpty()){throw new EntityNotFoundException("post not found");}
+
+        likesPostsRepository.deleteByUsersIdAndPostsId(userId, postId);
+
+        // 원자적으로 post의 likeCount를 -1 하는 SQL
+        postsCountsRepository.decrementLikeCount(postId);
+
+        int likeCount = postsCountsRepository.getLikeCount(postId);
+
+        return LikesPostsResponseDTO.LikesPostsResultResponse.builder()
+                .likeCount(likeCount).userPressed(false).build();
     }
 
 }
