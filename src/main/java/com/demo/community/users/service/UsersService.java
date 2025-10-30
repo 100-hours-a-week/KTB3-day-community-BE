@@ -5,12 +5,15 @@ import com.demo.community.users.domain.repository.UserRepository;
 import com.demo.community.users.dto.UsersRequestDTO;
 import com.demo.community.users.dto.UsersResponseDTO;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.naming.AuthenticationException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -18,6 +21,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -107,5 +111,69 @@ public class UsersService {
         return UsersResponseDTO.UserImageResponse.builder().url(finalUrl).build();
     }
 
+    @Transactional
+    public UsersResponseDTO.UserInfoResponse getUser (Long userId, Long curUser){
+        // 인가
+        if (!Objects.equals(userId, curUser)) {
+            throw new EntityNotFoundException("forbidden user (not a writer)");
+        }
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("user not found"));
+
+        return UsersResponseDTO.UserInfoResponse.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .userImage(user.getProfileImage())
+                .createdAt(user.getCreatedAt())
+                .modifiedAt(user.getUpdatedAt()).build();
+    }
+
+    @Transactional
+    public void modifyPassword (
+            UsersRequestDTO.PasswordUpdateRequest request,
+            Long userId,
+            Long curUser
+    ){
+        if (!Objects.equals(userId, curUser)) {
+            throw new EntityNotFoundException("forbidden user");
+        }
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("user not found"));
+
+        if (!passwordEncoder.matches(request.getCurPassword(), user.getPassword())){
+            throw new AccessDeniedException("current password not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
+    @Transactional
+    public UsersResponseDTO.UserInfoResponse updateProfile (
+        UsersRequestDTO.UserUpdateRequest request,
+        Long userId,
+        Long curUser
+    ){
+        if (!Objects.equals(userId, curUser)) {
+            throw new EntityNotFoundException("forbidden user (not a writer)");
+        }
+
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("user not found"));
+
+        user.updateUser(request.getNickname(), request.getProfileImage());
+
+        userRepository.flush();
+
+        return UsersResponseDTO.UserInfoResponse.builder()
+                .userId(user.getId())
+                .userImage(user.getProfileImage())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .createdAt(user.getCreatedAt())
+                .modifiedAt(user.getUpdatedAt()).build();
+    }
 
 }

@@ -148,9 +148,6 @@ public class PostService {
 
     @Transactional
     public PostResponseDTO.PostUpdateResponse updatePost(PostRequestDTO.PostUpdateRequest request, Long postId, Long userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("user not found"));
-
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("post not found"));
 
