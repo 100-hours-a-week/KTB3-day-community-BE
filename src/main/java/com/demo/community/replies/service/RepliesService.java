@@ -106,4 +106,17 @@ public class RepliesService {
                 .profileImg(gotReply.getUsers().getProfileImage()).build();
     }
 
+    @Transactional
+    public void deleteReply(Long replyId, Long userId){
+
+        Optional<Replies> reply = repliesRepository.findById(replyId);
+        if(reply.isEmpty()){throw new EntityNotFoundException("post not found");}
+
+        if (!reply.get().getUsers().getId().equals(userId)){
+            throw new EntityNotFoundException("delete forbidden user");
+        }
+
+        repliesRepository.deleteById(replyId);
+    }
+
 }

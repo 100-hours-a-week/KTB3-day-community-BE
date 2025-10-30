@@ -62,12 +62,26 @@ public class RepliesController {
             HttpServletRequest req
     ){
         HttpSession session = req.getSession(false);
-        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("session expired", null));}
         Long userId = (Long) session.getAttribute("USER_ID");
 
         RepliesResponseDTO.ReplyDetailResponse result = repliesService.updateReply(replyId, userId, request);
 
         return ResponseEntity.ok(new ApiResponse<>("reply successfully updated", result));
+    }
+
+    @DeleteMapping("/{replyId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReply(
+            @PathVariable("replyId") Long replyId,
+            HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("session expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
+
+        repliesService.deleteReply(replyId, userId);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
