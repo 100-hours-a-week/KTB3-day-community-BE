@@ -16,6 +16,7 @@ public class RepliesResponseDTO {
     public static class ReplyDetailResponse{
         private String content;
         private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
         private String nickname;
         private String profileImg;
         private Long id;

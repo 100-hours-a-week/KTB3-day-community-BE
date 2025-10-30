@@ -41,7 +41,7 @@ public class RepliesController {
             HttpServletRequest req
     ){
         HttpSession session = req.getSession(false);
-        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("session expired", null));}
         Long userId = (Long) session.getAttribute("USER_ID");
 
         RepliesResponseDTO.ReplyDetailResponse result = repliesService.createReply(userId, request);
@@ -53,6 +53,21 @@ public class RepliesController {
                 .toUri();
 
         return ResponseEntity.created(location).body(new ApiResponse<>("reply created", result));
+    }
+
+    @PatchMapping("/{replyId}")
+    public ResponseEntity<ApiResponse<RepliesResponseDTO.ReplyDetailResponse>> updateReply(
+            @PathVariable("replyId") Long replyId,
+            @RequestBody @Valid RepliesRequestDTO.ReplyUpdateRequest request,
+            HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long userId = (Long) session.getAttribute("USER_ID");
+
+        RepliesResponseDTO.ReplyDetailResponse result = repliesService.updateReply(replyId, userId, request);
+
+        return ResponseEntity.ok(new ApiResponse<>("reply successfully updated", result));
     }
 
 }

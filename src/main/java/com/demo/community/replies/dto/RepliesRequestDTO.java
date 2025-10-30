@@ -16,4 +16,13 @@ public class RepliesRequestDTO {
         private String content;
     }
 
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    @Setter
+    public static class ReplyUpdateRequest{
+        private String content;
+    }
+
 }

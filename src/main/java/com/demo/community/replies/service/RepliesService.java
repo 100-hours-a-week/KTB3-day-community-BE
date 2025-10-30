@@ -12,10 +12,12 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -76,6 +78,32 @@ public class RepliesService {
                 .nickname(reply.getUsers().getNickname())
                 .profileImg(reply.getUsers().getProfileImage())
                 .content(reply.getContent()).build();
+    }
+
+    @Transactional
+    public RepliesResponseDTO.ReplyDetailResponse updateReply(Long replyId, Long userId, RepliesRequestDTO.ReplyUpdateRequest request){
+
+        Optional<Replies> reply = repliesRepository.findById(replyId);
+        if(reply.isEmpty()){throw new EntityNotFoundException("post not found");}
+
+        Replies gotReply = reply.get();
+
+        // 인가
+        if (!Objects.equals(userId, gotReply.getUsers().getId())){
+            throw new AccessDeniedException("forbidden user (not a writer)");
+        }
+
+        gotReply.setContent(request.getContent());
+        repliesRepository.flush();
+
+        return RepliesResponseDTO.ReplyDetailResponse.builder()
+                .id(gotReply.getId())
+                .content(gotReply.getContent())
+                .createdAt(gotReply.getCreatedAt())
+                .updatedAt(gotReply.getUpdatedAt())
+                .userId(gotReply.getUsers().getId())
+                .nickname(gotReply.getUsers().getNickname())
+                .profileImg(gotReply.getUsers().getProfileImage()).build();
     }
 
 }
