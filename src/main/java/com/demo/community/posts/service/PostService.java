@@ -1,9 +1,11 @@
 package com.demo.community.posts.service;
 
+import com.demo.community.likes.domain.repository.LikesPostsRepository;
 import com.demo.community.posts.domain.entity.*;
 import com.demo.community.posts.domain.repository.PostRepository;
 import com.demo.community.posts.domain.repository.PostViewCountsRepository;
 import com.demo.community.posts.domain.repository.PostsCountsRepository;
+import com.demo.community.posts.domain.repository.PostsImageRepository;
 import com.demo.community.posts.dto.PostRequestDTO;
 import com.demo.community.posts.dto.PostResponseDTO;
 import com.demo.community.users.domain.enitty.QUsers;
@@ -32,6 +34,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostsCountsRepository postsCountsRepository;
     private final PostViewCountsRepository postViewCountsRepository;
+    private final PostsImageRepository postsImageRepository;
+    private final LikesPostsRepository likesPostsRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional
@@ -61,9 +65,6 @@ public class PostService {
 
     @Transactional
     public void deletePost(Long postId, Long userId){
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("user not found"));
-
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("post not found"));
 
@@ -73,6 +74,9 @@ public class PostService {
             throw new EntityNotFoundException("delete forbidden user");
         }
 
+        postViewCountsRepository.deleteById(postId);
+        postsCountsRepository.deleteById(postId);
+        postsImageRepository.deleteByPostId(postId);
         postRepository.delete(post);
     }
 
@@ -127,6 +131,8 @@ public class PostService {
 
         Tuple t = rows.getFirst();
 
+        boolean likepressed = likesPostsRepository.existsByUsersIdAndPostsId(userId, postId);
+
         // 이 값이 null 일 때 (존재하지 않는 postId일 때) 오류 반환하는 코드 필요함.
         return PostResponseDTO.PostDetailResponse.builder()
                 .postId(t.get(p.id))
@@ -138,7 +144,7 @@ public class PostService {
                         .like(t.get(pc.likeCounts))
                         .reply(t.get(pc.replyCounts))
                         .visit(t.get(pv.viewCounts)).build())
-                .likePressed(false)
+                .likePressed(likepressed)
                 .authorization(Objects.equals(t.get(u.id), userId))
                 .images(imageUrls)
                 .build();
@@ -146,9 +152,6 @@ public class PostService {
 
     @Transactional
     public PostResponseDTO.PostUpdateResponse updatePost(PostRequestDTO.PostUpdateRequest request, Long postId, Long userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("user not found"));
-
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("post not found"));
 
