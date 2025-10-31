@@ -144,6 +144,20 @@ public class UsersController {
 
 
     // 유저 회원탈퇴
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @PathVariable("userId") Long userId,
+            HttpServletRequest req
+    ){
+        HttpSession session = req.getSession(false);
+        // 인증
+        if (session == null) {return ResponseEntity.status(401).body(new ApiResponse<>("sessoin expired", null));}
+        Long curUser = (Long) session.getAttribute("USER_ID");
+
+        usersService.deleteUser(userId, curUser);
+
+        return ResponseEntity.noContent().build();
+    }
 
 
 }

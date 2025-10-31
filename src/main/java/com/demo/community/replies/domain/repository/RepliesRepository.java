@@ -3,6 +3,7 @@ package com.demo.community.replies.domain.repository;
 import com.demo.community.replies.domain.entity.Replies;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,7 @@ public interface RepliesRepository extends JpaRepository<Replies, Long> {
                                     @Param("cursorId") Long cursorId,
                                     Pageable pageable);
 
+    @Modifying
+    @Query("update Replies r set r.users = null where r.users.id = :userId")
+    int nullifyUserReferences(@Param("userId") Long userId);
 }

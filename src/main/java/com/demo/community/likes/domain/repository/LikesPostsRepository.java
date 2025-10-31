@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface LikesPostsRepository extends JpaRepository<LikesPosts, Long> {
     void deleteByUsersIdAndPostsId(Long userId, Long postId);
+    void deleteByUsersId(Long userId);
     boolean existsByUsersIdAndPostsId(Long userId, Long postId);
 }

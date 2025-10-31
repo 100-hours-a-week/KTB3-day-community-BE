@@ -1,5 +1,9 @@
 package com.demo.community.users.service;
 
+import com.demo.community.likes.domain.repository.LikesPostsRepository;
+import com.demo.community.posts.domain.entity.Posts;
+import com.demo.community.posts.domain.repository.PostRepository;
+import com.demo.community.replies.domain.repository.RepliesRepository;
 import com.demo.community.users.domain.enitty.Users;
 import com.demo.community.users.domain.repository.UserRepository;
 import com.demo.community.users.dto.UsersRequestDTO;
@@ -47,6 +51,9 @@ public class UsersService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final PostRepository postRepository;
+    private final RepliesRepository repliesRepository;
+    private final LikesPostsRepository likesPostsRepository;
 
     @Transactional
     public Long creatUser(UsersRequestDTO.UserCreateRequest req){
@@ -176,6 +183,25 @@ public class UsersService {
                 .nickname(user.getNickname())
                 .createdAt(user.getCreatedAt())
                 .modifiedAt(user.getUpdatedAt()).build();
+    }
+
+    @Transactional
+    public void deleteUser(Long userId, Long curUser){
+        Optional<Users> user = userRepository.findById(userId);
+        if (user.isEmpty()){throw new EntityNotFoundException("user not found");}
+
+        // 여기서 lazy 로딩 될듯?
+        if (userId != curUser){
+            // 이 예외도 나중에 실패코드를 응답하는 커스텀 예외로 변경해야함.
+            throw new EntityNotFoundException("delete forbidden user");
+        }
+
+        // Post, 댓글은 안지우고 FK를 null로 만들고, 게시글 좋아요만 지우면 됨.
+        postRepository.nullifyUserReferences(userId);
+        repliesRepository.nullifyUserReferences(userId);
+        likesPostsRepository.deleteByUsersId(userId);
+
+        userRepository.deleteById(userId);
     }
 
 }

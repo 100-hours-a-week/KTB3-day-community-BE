@@ -2,6 +2,7 @@ package com.demo.community.posts.domain.repository;
 
 import com.demo.community.posts.domain.entity.Posts;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,7 @@ public interface PostRepository extends JpaRepository<Posts, Long> {
     @Query(value = "SELECT * FROM posts WHERE id < :cursorId ORDER BY id DESC LIMIT :limit", nativeQuery = true)
     List<Posts> listOtherPage(@Param("cursorId") Long cursorId, @Param("limit") int limit);
 
+    @Modifying
+    @Query("update Posts lp set lp.user = null where lp.user.id = :userId")
+    int nullifyUserReferences(@Param("userId") Long userId);
 }
